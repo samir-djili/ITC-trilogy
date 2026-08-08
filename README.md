@@ -470,6 +470,18 @@ curl -sS \
 
 ![Challenge 3 solved](photos/chall-3-solved.png)
 
+## Takeaway
+
+The three solves all come down to the same mistake: the security layer and the application did not agree on the value they were handling.
+
+- in the first challenge, the filter blocked obvious private IPv4 strings, while the app still accepted an IPv4-mapped IPv6 address
+- in the second one, the policy check and the app disagreed on repeated `Forwarded` headers
+- in the third one, the URL validator and the HTTP client disagreed on where the host actually was
+
+That progression is what made the set work for me. Each challenge was compact, but the solve was never just "reuse the last trick". It kept forcing the same question in a slightly different place: what exactly got parsed, and who used the parsed result?
+
+Big thanks to Ayoub for the clean trilogy.
+
 ## Flags
 
 ```text
