@@ -298,7 +298,7 @@ This is why repeated headers get messy in security-sensitive code. HTTP lets rep
 
 The patch closed the first spelling, but the trust boundary was still wrong: public users could still influence "where the request came from".
 
-## 3. Throughfall
+## 3. Anabasis
 
 Target:
 
